@@ -1,3 +1,7 @@
+import os
+import pandas as pd
+player_cnt = 0
+
 def display_board(board):
     print("\t{0} | {1} | {2}".format(board[0], board[1], board[2]))
     print("\t_ | _ | _")
@@ -6,8 +10,9 @@ def display_board(board):
     print("\t{0} | {1} | {2}".format(board[6], board[7], board[8]))
 
 class Player(object):
-    def __init__(self,take='X'):
+    def __init__(self,take='X', name='Player'):
         self.take=take
+        self.name=name
     def legal_moves(self, board):
         """Returns the list of available positions"""
         moves = []
@@ -17,6 +22,13 @@ class Player(object):
         return moves
 
 class HumanPlayer(Player):
+    def __init__(self, take, name=None):
+        if name is None:
+            global player_cnt
+            player_cnt += 1
+            name = input("Player %d please enter your name:" % player_cnt)
+        super().__init__(take, name=name)
+
     def getPlayerMove(self, board):
         move = 9
         while move not in self.legal_moves(board):
@@ -25,7 +37,7 @@ class HumanPlayer(Player):
 
 class ComputerPlayer(Player):
     def __init__(self, take, game):
-        super().__init__(take)
+        super().__init__(take, name='Computer')
         self.game = game
     def getPlayerMove(self, board):
         computerLetter = self.take
@@ -78,69 +90,12 @@ class Game(object):
             if i in board:
                 return False
         return True
-
     
-
-def tic_tac_toe():
-    game_mode = input("Please choose your game mode (pvp or pve):")
-    game = Game()
-    if game_mode == 'pvp':
-        playerLetter = input("Player1 please choose'X'and'O', X goes first" )
-        if playerLetter in ("X"):
-            turn = "player1"
-            player1Letter = "X"
-            player2Letter ="O"
-            player1 = HumanPlayer(take="X")
-            player2 = HumanPlayer(take="O")
-        else:
-            turn = "player2"
-            player2Letter = "X"
-            player1Letter = "O"
-            player1 = HumanPlayer(take="O")
-            player2 = HumanPlayer(take="X")
-    elif game_mode == 'pve':
-        playerLetter = input("Player please choose'X'and'O', X goes first" )
-        if playerLetter in ("X"):
-            turn = "player1"
-            player1Letter = "X"
-            player2Letter ="O"
-            player1 = HumanPlayer(take="X")
-            player2 = ComputerPlayer(game=game, take="O")
-        else:
-            turn = "player2"
-            player2Letter = "X"
-            player1Letter = "O"
-            player1 = HumanPlayer(take="O")
-            player2 = ComputerPlayer(game=game, take="X")
-    else:
-        return None
-    
-    print("{}goes first".format(turn))
-    while True:
-        display_board(game.board)
-        if turn == 'player1':
-            move = player1.getPlayerMove(game.board)
-            game.board[move] = player1Letter
-            if game.isWinner(game.board):
-                display_board(game.board)
-                print("Player1 Win")
-                break
-            else:
-                turn = "player2"
-        else:
-            move = player2.getPlayerMove(game.board)
-            game.board[move] = player2Letter
-            if game.isWinner(game.board):
-                display_board(game.board)
-                print("Player2 Win")
-                break
-            else:
-                turn = "player1"
-
-        if game.isDraw(game.board):
-            display_board(game.board)
-            print('Draw')
-            break
-
-if __name__ == '__main__':
-    tic_tac_toe()
+    def update_statistics(self, winner):
+        df = pd.DataFrame({
+                "player1": [self.player1.name],
+                "player2": [self.player2.name],
+                "winner": [winner],
+                "draw": [winner is None]
+        })
+        df.to_csv('savegame.csv', mode="a",header=not os.path.exists('savegame.csv'), index=False)
