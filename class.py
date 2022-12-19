@@ -20,7 +20,7 @@ class HumanPlayer(Player):
     def getPlayerMove(self, board):
         move = 9
         while move not in self.legal_moves(board):
-            move = int(input("Player1 please select the drop position (0-8):"))
+            move = int(input("Player please select the drop position (0-8):"))
         return move
 
 class ComputerPlayer(Player):
